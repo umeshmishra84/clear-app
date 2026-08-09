@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clear — morning brain dump</title>
+<style>
+  :root{
+    --sky-1:#2b3a55;
+    --sky-2:#5c7a9e;
+    --dawn:#e8a87c;
+    --dawn-soft:#f4c9a3;
+    --paper:#fbf7f1;
+    --ink:#2b2620;
+    --ink-soft:#6b6258;
+    --line:#e4dccf;
+    --do-now:#c97b4a;
+    --quick:#5c8a6e;
+    --weight:#7c7fa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Iowan Old Style','Georgia',serif;
+    background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 35%,var(--dawn-soft) 78%,var(--paper) 100%);
+    min-height:100vh;
+    color:var(--ink);
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:40px;
+  }
+  .mark{
+    font-size:13px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.85);
+    margin-bottom:10px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+  }
+  h1{
+    font-size:34px;
+    font-weight:400;
+    color:#fff;
+    margin:0 0 10px;
+    letter-spacing:0.01em;
+  }
+  .sub{
+    color:rgba(255,255,255,0.8);
+    font-size:16px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    max-width:420px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+  .card{
+    background:var(--paper);
+    border-radius:4px;
+    box-shadow:0 20px 60px rgba(43,58,85,0.25);
+    padding:32px;
+  }
+  textarea{
+    width:100%;
+    min-height:160px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px;
+    font-family:inherit;
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink);
+    background:#fff;
+    resize:vertical;
+  }
+  textarea:focus{
+    outline:2px solid var(--dawn);
+    outline-offset:1px;
+  }
+  .hint{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  button{
+    margin-top:20px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:14px 28px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:15px;
+    letter-spacing:0.03em;
+    border-radius:3px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  button:hover{background:var(--do-now);}
+  button:focus-visible{outline:2px solid var(--dawn); outline-offset:2px;}
+
+  .results{
+    margin-top:36px;
+    display:none;
+  }
+  .results.show{display:block;}
+  .first-thing{
+    background:var(--do-now);
+    color:#fff;
+    padding:18px 20px;
+    border-radius:3px;
+    margin-bottom:28px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+  }
+  .first-thing .eyebrow{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    opacity:0.85;
+    margin-bottom:6px;
+  }
+  .first-thing .item{
+    font-size:19px;
+    font-family:'Iowan Old Style','Georgia',serif;
+  }
+  .section{
+    margin-bottom:26px;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+  .section:first-of-type{border-top:none;padding-top:0;}
+  .section-title{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.do-now{background:var(--do-now);}
+  .dot.quick{background:var(--quick);}
+  .dot.weight{background:var(--weight);}
+  ul{margin:0;padding-left:0;list-style:none;}
+  li{
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:16px;
+    line-height:1.5;
+  }
+  li:last-child{border-bottom:none;}
+  .weight-note{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:10px;
+    font-style:italic;
+    line-height:1.5;
+  }
+  footer{
+    text-align:center;
+    margin-top:28px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    color:rgba(255,255,255,0.6);
+  }
+  .prototype-tag{
+    text-align:center;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">CLEAR · morning check-in</div>
+    <h1>What's on your mind?</h1>
+    <p class="sub">Get it all out. We'll help you find your footing.</p>
+  </header>
+
+  <div class="card">
+    <textarea id="dump" placeholder="Type everything — tasks, worries, whatever's loud in your head right now..."></textarea>
+    <div class="hint">No judgment. No formatting needed. Just write it like you'd say it out loud.</div>
+    <button id="sortBtn">Sort my morning</button>
+
+    <div class="results" id="results">
+      <div class="first-thing" id="firstThing"></div>
+
+      <div class="section" id="doNowSection">
+        <div class="section-title"><span class="dot do-now"></span>DO TODAY</div>
+        <ul id="doNowList"></ul>
+      </div>
+
+      <div class="section" id="quickSection">
+        <div class="section-title"><span class="dot quick"></span>QUICK, NOT URGENT</div>
+        <ul id="quickList"></ul>
+      </div>
+
+      <div class="section" id="weightSection">
+        <div class="section-title"><span class="dot weight"></span>WEIGHING ON YOU</div>
+        <ul id="weightList"></ul>
+        <div class="weight-note">These aren't tasks to check off. Just noticing them is enough for this morning.</div>
+      </div>
+    </div>
+  </div>
+  <footer>Every morning, a little less to carry.</footer>
+</div>
+
+<script>
+const sortBtn = document.getElementById('sortBtn');
+const dumpBox = document.getElementById('dump');
+
+async function sortWithAI(text){
+  const response = await fetch('/api/sort', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok) {
+    throw new Error('Something went wrong reaching the AI.');
+  }
+  return response.json();
+}
+
+sortBtn.addEventListener('click', async () => {
+  const text = dumpBox.value.trim();
+  if (!text) return;
+
+  sortBtn.disabled = true;
+  sortBtn.textContent = 'Sorting...';
+
+  let buckets;
+  try {
+    const result = await sortWithAI(text);
+    buckets = {
+      doNow: result.doNow || [],
+      quick: result.quick || [],
+      weight: result.weight || [],
+      firstThing: result.firstThing || '',
+    };
+  } catch (err) {
+    sortBtn.disabled = false;
+    sortBtn.textContent = 'Sort my morning';
+    alert('Could not sort right now. Please try again in a moment.');
+    return;
+  }
+
+  sortBtn.disabled = false;
+  sortBtn.textContent = 'Sort my morning';
+
+  const doNowList = document.getElementById('doNowList');
+  const quickList = document.getElementById('quickList');
+  const weightList = document.getElementById('weightList');
+  doNowList.innerHTML = '';
+  quickList.innerHTML = '';
+  weightList.innerHTML = '';
+
+  buckets.doNow.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    doNowList.appendChild(li);
+  });
+  buckets.quick.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    quickList.appendChild(li);
+  });
+  buckets.weight.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    weightList.appendChild(li);
+  });
+
+  document.getElementById('doNowSection').style.display = buckets.doNow.length ? 'block' : 'none';
+  document.getElementById('quickSection').style.display = buckets.quick.length ? 'block' : 'none';
+  document.getElementById('weightSection').style.display = buckets.weight.length ? 'block' : 'none';
+
+  const firstThing = document.getElementById('firstThing');
+  if (buckets.firstThing) {
+    firstThing.innerHTML = '<div class="eyebrow">Start here</div><div class="item">' + buckets.firstThing + '</div>';
+    firstThing.style.display = 'block';
+  } else {
+    firstThing.style.display = 'none';
+  }
+
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+});
+</script>
+</body>
+</html>
