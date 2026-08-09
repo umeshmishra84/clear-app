@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -17,6 +17,7 @@
     --do-now:#c97b4a;
     --quick:#5c8a6e;
     --weight:#7c7fa8;
+    --note-bg:#f0ede6;
   }
   *{box-sizing:border-box;}
   body{
@@ -54,7 +55,7 @@
     color:rgba(255,255,255,0.8);
     font-size:16px;
     font-family:'Helvetica Neue',Arial,sans-serif;
-    max-width:420px;
+    max-width:440px;
     margin:0 auto;
     line-height:1.5;
   }
@@ -63,6 +64,25 @@
     border-radius:4px;
     box-shadow:0 20px 60px rgba(43,58,85,0.25);
     padding:32px;
+  }
+  .example{
+    background:var(--note-bg);
+    border-left:3px solid var(--dawn);
+    padding:14px 16px;
+    margin-bottom:18px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    border-radius:2px;
+  }
+  .example strong{color:var(--ink);}
+  .example .eg-text{
+    font-family:'Iowan Old Style','Georgia',serif;
+    font-style:italic;
+    color:var(--ink);
+    margin-top:4px;
+    display:block;
   }
   textarea{
     width:100%;
@@ -102,12 +122,23 @@
   }
   button:hover{background:var(--do-now);}
   button:focus-visible{outline:2px solid var(--dawn); outline-offset:2px;}
+  button:disabled{opacity:0.6; cursor:default;}
 
   .results{
     margin-top:36px;
     display:none;
   }
   .results.show{display:block;}
+  .note-box{
+    background:var(--note-bg);
+    padding:18px 20px;
+    border-radius:3px;
+    margin-bottom:20px;
+    font-size:16px;
+    line-height:1.6;
+    font-style:italic;
+    color:var(--ink);
+  }
   .first-thing{
     background:var(--do-now);
     color:#fff;
@@ -163,19 +194,47 @@
     font-style:italic;
     line-height:1.5;
   }
+  .followup{
+    margin-top:28px;
+    border-top:1px solid var(--line);
+    padding-top:22px;
+    display:none;
+  }
+  .followup.show{display:block;}
+  .followup-q{
+    font-size:16px;
+    margin-bottom:12px;
+    line-height:1.5;
+  }
+  .followup-row{
+    display:flex;
+    gap:10px;
+  }
+  .followup-row input{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:15px;
+    background:#fff;
+  }
+  .followup-row input:focus{
+    outline:2px solid var(--dawn);
+    outline-offset:1px;
+  }
+  .followup-row button{
+    margin-top:0;
+    padding:12px 20px;
+    font-size:14px;
+    white-space:nowrap;
+  }
   footer{
     text-align:center;
     margin-top:28px;
     font-family:'Helvetica Neue',Arial,sans-serif;
     font-size:12px;
     color:rgba(255,255,255,0.6);
-  }
-  .prototype-tag{
-    text-align:center;
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-top:14px;
   }
 </style>
 </head>
@@ -188,11 +247,16 @@
   </header>
 
   <div class="card">
+    <div class="example">
+      <strong>How to use this:</strong> write it like you're talking to a friend — tasks, deadlines, things you're stuck on, things that are just weighing on you. Don't worry about making sense.
+      <span class="eg-text">"Had an argument with my wife this morning, can't stop thinking about it. Big meeting at work today and I'm too distracted to prep. Son's school fee is due today. Should probably call my mom about her doctor's appointment too."</span>
+    </div>
     <textarea id="dump" placeholder="Type everything — tasks, worries, whatever's loud in your head right now..."></textarea>
     <div class="hint">No judgment. No formatting needed. Just write it like you'd say it out loud.</div>
     <button id="sortBtn">Sort my morning</button>
 
     <div class="results" id="results">
+      <div class="note-box" id="noteBox"></div>
       <div class="first-thing" id="firstThing"></div>
 
       <div class="section" id="doNowSection">
@@ -210,6 +274,14 @@
         <ul id="weightList"></ul>
         <div class="weight-note">These aren't tasks to check off. Just noticing them is enough for this morning.</div>
       </div>
+
+      <div class="followup" id="followupBox">
+        <div class="followup-q" id="followupQ"></div>
+        <div class="followup-row">
+          <input type="text" id="followupAnswer" placeholder="Type your answer...">
+          <button id="followupBtn">Continue</button>
+        </div>
+      </div>
     </div>
   </div>
   <footer>Every morning, a little less to carry.</footer>
@@ -218,12 +290,20 @@
 <script>
 const sortBtn = document.getElementById('sortBtn');
 const dumpBox = document.getElementById('dump');
+const followupBox = document.getElementById('followupBox');
+const followupQ = document.getElementById('followupQ');
+const followupAnswer = document.getElementById('followupAnswer');
+const followupBtn = document.getElementById('followupBtn');
 
-async function sortWithAI(text){
+const MAX_FOLLOWUPS = 2;
+let history = [];
+let originalText = '';
+
+async function sortWithAI(text, historyArg){
   const response = await fetch('/api/sort', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, history: historyArg }),
   });
   if (!response.ok) {
     throw new Error('Something went wrong reaching the AI.');
@@ -231,31 +311,14 @@ async function sortWithAI(text){
   return response.json();
 }
 
-sortBtn.addEventListener('click', async () => {
-  const text = dumpBox.value.trim();
-  if (!text) return;
-
-  sortBtn.disabled = true;
-  sortBtn.textContent = 'Sorting...';
-
-  let buckets;
-  try {
-    const result = await sortWithAI(text);
-    buckets = {
-      doNow: result.doNow || [],
-      quick: result.quick || [],
-      weight: result.weight || [],
-      firstThing: result.firstThing || '',
-    };
-  } catch (err) {
-    sortBtn.disabled = false;
-    sortBtn.textContent = 'Sort my morning';
-    alert('Could not sort right now. Please try again in a moment.');
-    return;
-  }
-
-  sortBtn.disabled = false;
-  sortBtn.textContent = 'Sort my morning';
+function renderResult(result){
+  const buckets = {
+    doNow: result.doNow || [],
+    quick: result.quick || [],
+    weight: result.weight || [],
+    firstThing: result.firstThing || '',
+    note: result.note || '',
+  };
 
   const doNowList = document.getElementById('doNowList');
   const quickList = document.getElementById('quickList');
@@ -284,6 +347,14 @@ sortBtn.addEventListener('click', async () => {
   document.getElementById('quickSection').style.display = buckets.quick.length ? 'block' : 'none';
   document.getElementById('weightSection').style.display = buckets.weight.length ? 'block' : 'none';
 
+  const noteBox = document.getElementById('noteBox');
+  if (buckets.note) {
+    noteBox.textContent = buckets.note;
+    noteBox.style.display = 'block';
+  } else {
+    noteBox.style.display = 'none';
+  }
+
   const firstThing = document.getElementById('firstThing');
   if (buckets.firstThing) {
     firstThing.innerHTML = '<div class="eyebrow">Start here</div><div class="item">' + buckets.firstThing + '</div>';
@@ -292,8 +363,57 @@ sortBtn.addEventListener('click', async () => {
     firstThing.style.display = 'none';
   }
 
+  // Follow-up question handling, capped at MAX_FOLLOWUPS
+  if (result.followUpQuestion && history.length < MAX_FOLLOWUPS) {
+    followupQ.textContent = result.followUpQuestion;
+    followupAnswer.value = '';
+    followupBox.classList.add('show');
+  } else {
+    followupBox.classList.remove('show');
+  }
+
   document.getElementById('results').classList.add('show');
   document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function runSort(){
+  sortBtn.disabled = true;
+  sortBtn.textContent = 'Sorting...';
+  followupBox.classList.remove('show');
+
+  try {
+    const result = await sortWithAI(originalText, history);
+    renderResult(result);
+  } catch (err) {
+    alert('Could not sort right now. Please try again in a moment.');
+  }
+
+  sortBtn.disabled = false;
+  sortBtn.textContent = 'Sort my morning';
+}
+
+sortBtn.addEventListener('click', () => {
+  const text = dumpBox.value.trim();
+  if (!text) return;
+  originalText = text;
+  history = [];
+  runSort();
+});
+
+followupBtn.addEventListener('click', () => {
+  const answer = followupAnswer.value.trim();
+  if (!answer) return;
+  history.push({ question: followupQ.textContent, answer });
+  followupBtn.disabled = true;
+  followupBtn.textContent = '...';
+  runSort().then(() => {
+    followupBtn.disabled = false;
+    followupBtn.textContent = 'Continue';
+  });
+});
+
+followupAnswer.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') followupBtn.click();
 });
 </script>
 </body>
